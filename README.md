@@ -65,11 +65,11 @@ algerian-lpr/
    The pre-trained model weights (`.pt` files) and raw image datasets are too large for Git. Download them manually from the links below and place them in their respective folders:
 
    * **Models (Place in `weights/` directory):**
-     * [YOLOv8 Detection Model (11MB)](https://drive.google.com/file/d/YOUR_LINK_HERE/view) — `detector_algerian500_v150.pt`
-     * [CRNN Recognition Model (20MB)](https://drive.google.com/file/d/YOUR_LINK_HERE/view) — `ocr_model.pt`
-     * [YOLOv8 Base Weights (21MB)](https://drive.google.com/file/d/YOUR_LINK_HERE/view) — `yolov8s.pt`
+     * [YOLOv8 Detection Model (11MB)](https://drive.google.com/drive/folders/1_2C0wZXz9646zwE1UatzZ8Q9Y4OeJ4lW?usp=sharing) — `detector_algerian500_v150.pt`
+     * [CRNN Recognition Model (20MB)](https://drive.google.com/drive/folders/1_2C0wZXz9646zwE1UatzZ8Q9Y4OeJ4lW?usp=sharing) — `ocr_model.pt`
+     * [YOLOv8 Base Weights (21MB)](https://drive.google.com/drive/folders/1_2C0wZXz9646zwE1UatzZ8Q9Y4OeJ4lW?usp=sharing) — `yolov8s.pt`
    * **Datasets (Place in `data/` directory):**
-     * [Matricules Test Images ZIP (150MB)](https://drive.google.com/file/d/YOUR_LINK_HERE/view) — Extract to `data/Matricules/`
+     * [Matricules Test Images ZIP (150MB)](https://drive.google.com/drive/folders/1_2C0wZXz9646zwE1UatzZ8Q9Y4OeJ4lW?usp=sharing) — Extract to `data/Matricules/`
 
 ---
 
