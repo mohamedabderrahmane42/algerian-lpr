@@ -146,23 +146,76 @@ def ctc_greedy_decode(log_probs: np.ndarray, blank: int) -> str:
 # ──────────────────────────────────────────────
 # Plate text formatting
 # ──────────────────────────────────────────────
+# Valid Algerian wilaya codes: 01–58
+WILAYAS = {str(i).zfill(2) for i in range(1, 59)}
+
+
+def _try_format(d: str):
+    """
+    Try to format a digit string as an Algerian plate.
+    Returns formatted string if last 2 digits are a valid wilaya, else None.
+    Handles:
+      NNNNN-WWW-WW  (5+3+2 = 10)  new format since 2004
+      NNNN-NNNN-WW  (4+4+2 = 10)  older format
+      NNNNN-NNNN-WW (5+4+2 = 11)  rare extended format
+    """
+    n = len(d)
+    if n < 6:
+        return None
+    wil = d[-2:]
+    if wil not in WILAYAS:
+        return None
+    mid = d[:-2]           # everything except wilaya
+    ml  = len(mid)
+    # try right-hand group of 3 then 4
+    for rg in (3, 4):
+        if ml > rg:
+            left  = mid[:-rg]
+            right = mid[-rg:]
+            return f"{left} {right} {wil}"
+    # only one group left
+    return f"{mid} {wil}"
+
+
 def format_algerian(digits: str) -> str:
     """
-    Format a raw digit string as an Algerian plate: NNNNN WWW WW
-    Accepts 10-digit strings;  returns raw string if length unexpected.
+    Format a raw OCR digit string as a printed Algerian plate.
+
+    Strategy:
+      1. Try the digit string directly.
+      2. If it fails (no valid wilaya), and the string is 11 chars, try
+         removing each digit one at a time — return the first 10-digit
+         result whose last 2 digits are a valid wilaya code.
+      3. Fallback: standard 5+3+2 split (no wilaya check).
     """
     d = re.sub(r'[^0-9]', '', digits)
-    if len(d) == 10:
+
+    # Direct attempt
+    result = _try_format(d)
+    if result:
+        return result
+
+    # Error-correction: try removing one digit (handles extra OCR character)
+    if len(d) == 11:
+        for i in range(len(d)):
+            candidate = d[:i] + d[i+1:]
+            result = _try_format(candidate)
+            if result:
+                return result
+
+    # Hard fallback — split mechanically
+    n = len(d)
+    if n >= 10:
         return f"{d[:5]} {d[5:8]} {d[8:10]}"
-    if len(d) == 9:
-        return f"{d[:4]} {d[4:7]} {d[7:9]}"
+    if n == 9:
+        return f"{d[:4]} {d[4:7]} {d[7:]}"
     return d
 
 
 def is_valid_algerian(digits: str) -> bool:
-    """Return True if digit string could represent an Algerian plate."""
+    """Accept digit strings that plausibly encode an Algerian plate."""
     d = re.sub(r'[^0-9]', '', digits)
-    return 9 <= len(d) <= 11
+    return 8 <= len(d) <= 12
 
 
 # ──────────────────────────────────────────────
