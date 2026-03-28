@@ -182,26 +182,25 @@ def format_algerian(digits: str) -> str:
     Format a raw OCR digit string as a printed Algerian plate.
 
     Strategy:
-      1. Try the digit string directly.
-      2. If it fails (no valid wilaya), and the string is 11 chars, try
-         removing each digit one at a time — return the first 10-digit
-         result whose last 2 digits are a valid wilaya code.
-      3. Fallback: standard 5+3+2 split (no wilaya check).
+      1. If string is 11 chars, its likely an extra OCR character (screw, etc).
+         Try removing each digit to find a valid 10-digit plate first.
+      2. If no valid 10-digit found, try the original string.
+      3. Fallback: standard 5+3+2 split.
     """
     d = re.sub(r'[^0-9]', '', digits)
 
-    # Direct attempt
-    result = _try_format(d)
-    if result:
-        return result
-
-    # Error-correction: try removing one digit (handles extra OCR character)
+    # Error-correction: prioritize 10-digit results if we have 11
     if len(d) == 11:
         for i in range(len(d)):
             candidate = d[:i] + d[i+1:]
             result = _try_format(candidate)
             if result:
                 return result
+
+    # Direct attempt (handles 10-digit correctly, or 11-digit if actually valid)
+    result = _try_format(d)
+    if result:
+        return result
 
     # Hard fallback — split mechanically
     n = len(d)

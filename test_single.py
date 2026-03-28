@@ -74,15 +74,19 @@ def fmt(d):
     Handles: 5+3+2 (new), 4+4+2 (older), and 11-digit OCR errors.
     """
     d = re.sub(r'[^0-9]', '', d)
-    result = _try_fmt(d)
-    if result:
-        return result
-    # Error-correction: 11 digits with one spurious OCR character
+
+    # Error-correction: prioritize 10-digit results if we have 11
     if len(d) == 11:
         for i in range(len(d)):
             result = _try_fmt(d[:i] + d[i+1:])
             if result:
                 return result
+
+    # Direct attempt
+    result = _try_fmt(d)
+    if result:
+        return result
+
     # Hard fallback
     n = len(d)
     if n >= 10: return f"{d[:5]} {d[5:8]} {d[8:10]}"
