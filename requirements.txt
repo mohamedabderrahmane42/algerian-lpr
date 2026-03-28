@@ -8,3 +8,5 @@ torch
 torchvision
 albumentations
 pandas
+
+gdown

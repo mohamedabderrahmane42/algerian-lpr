@@ -61,7 +61,12 @@ algerian-lpr/
    pip install -r requirements.txt
    ```
 
-*(Note: Model weights `.pt` are not tracked by Git to save space. You can train new weights using the scripts below or download the pre-trained weights into the `weights/` folder).*
+4. **Download Models & Datasets (Google Drive):**
+   ```bash
+   python -m src.utils.download_assets
+   ```
+
+*(Note: Model weights `.pt` are not tracked by Git to save space. Run the script above or manually download the pre-trained weights into the `weights/` folder).*
 
 ---
 
