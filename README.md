@@ -62,11 +62,14 @@ algerian-lpr/
    ```
 
 4. **Download Models & Datasets (Google Drive):**
-   ```bash
-   python -m src.utils.download_assets
-   ```
+   The pre-trained model weights (`.pt` files) and raw image datasets are too large for Git. Download them manually from the links below and place them in their respective folders:
 
-*(Note: Model weights `.pt` are not tracked by Git to save space. Run the script above or manually download the pre-trained weights into the `weights/` folder).*
+   * **Models (Place in `weights/` directory):**
+     * [YOLOv8 Detection Model (11MB)](https://drive.google.com/file/d/YOUR_LINK_HERE/view) — `detector_algerian500_v150.pt`
+     * [CRNN Recognition Model (20MB)](https://drive.google.com/file/d/YOUR_LINK_HERE/view) — `ocr_model.pt`
+     * [YOLOv8 Base Weights (21MB)](https://drive.google.com/file/d/YOUR_LINK_HERE/view) — `yolov8s.pt`
+   * **Datasets (Place in `data/` directory):**
+     * [Matricules Test Images ZIP (150MB)](https://drive.google.com/file/d/YOUR_LINK_HERE/view) — Extract to `data/Matricules/`
 
 ---
 
