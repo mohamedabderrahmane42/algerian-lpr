@@ -24,12 +24,12 @@ env/
 # ── Training outputs ──────────────────────────
 runs/
 
-# ── Generated dataset (reproducible via prepare_dataset.py) ──
+# ── Generated dataset and weights ──────────
 yolo_dataset/
-
-# ── Input photos & raw datasets (too large for git) ──────────
-Matricules/
-License_Plates_of_Algeria_Dataset-master/
+data/
+weights/
+Algerian*/
+*.jpg
 
 # ── Inference output ──────────────────────────
 output/

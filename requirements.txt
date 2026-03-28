@@ -6,3 +6,5 @@ easyocr
 pandas
 torch
 torchvision
+albumentations
+pandas
