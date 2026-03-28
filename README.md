@@ -118,8 +118,3 @@ python -m src.training.train_ocr
 
 *To push OCR accuracy to 100%, consider using the **Hard Negative Mining** technique: Add cropped images that the CRNN previously failed to read, label them correctly, drop them into your training folder, and incrementally retrain the OCR module.*
 
----
-
-## 📄 License
-
-This project is open-source and available under the MIT License.
