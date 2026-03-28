@@ -1,0 +1,8 @@
+opencv-python
+tqdm
+shapely
+ultralytics
+easyocr
+pandas
+torch
+torchvision

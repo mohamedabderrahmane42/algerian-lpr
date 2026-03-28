@@ -1,0 +1,45 @@
+# ── Python ────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Virtual environment ───────────────────────
+venv/
+.venv/
+env/
+
+# ── Model weights (large binary files) ────────
+# Track source code only; download/train models separately.
+# Use Git LFS if you need to version weights in the repo.
+*.pt
+*.pth
+*.onnx
+*.weights
+
+# ── Training outputs ──────────────────────────
+runs/
+
+# ── Generated dataset (reproducible via prepare_dataset.py) ──
+yolo_dataset/
+
+# ── Input photos & raw datasets (too large for git) ──────────
+Matricules/
+License_Plates_of_Algeria_Dataset-master/
+
+# ── Inference output ──────────────────────────
+output/
+
+# ── IDE / OS ──────────────────────────────────
+.idea/
+.vscode/
+*.DS_Store
+Thumbs.db
+
+# ── Jupyter ───────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
