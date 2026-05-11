@@ -13,6 +13,7 @@ from typing import Tuple
 
 from src.config import MATRICULES, OUTPUT_DIR, CROPS_DIR, YOLO_BEST, OCR_MODEL, NUM_CLASSES, IMG_W, IMG_H
 from src.models.crnn import CRNN
+from src.data.ocr_support import enhance_ocr_image, load_compatible_crnn_weights
 from src.utils.formatters import decode_crnn, format_algerian
 
 # Confidence thresholds
@@ -28,23 +29,17 @@ def load_models(device) -> Tuple[object, nn.Module]:
 
     print(f"Loading CRNN from: {OCR_MODEL}")
     crnn = CRNN(NUM_CLASSES).to(device)
-    ckpt = torch.load(OCR_MODEL, map_location=device)
-    crnn.load_state_dict(ckpt['model_state_dict'])
+    skipped = load_compatible_crnn_weights(crnn, OCR_MODEL, device)
+    if skipped:
+        print(f"  Skipped {len(skipped)} incompatible tensors from the checkpoint")
     crnn.eval()
 
     return yolo_model, crnn
 
 def read_plate_crnn(img_crop: np.ndarray, crnn_model: nn.Module, device: str) -> Tuple[str, str]:
     """Given a plate crop, return (raw_digits, formatted_plate_string)."""
-    # Force Grayscale
-    if len(img_crop.shape) == 3:
-        img_crop = cv2.cvtColor(img_crop, cv2.COLOR_BGR2GRAY)
-        
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4))
-    img_crop = clahe.apply(img_crop)
-    img_crop = cv2.resize(img_crop, (IMG_W, IMG_H)).astype(np.float32) / 255.0
-    
-    img_tensor = torch.FloatTensor(img_crop).unsqueeze(0).unsqueeze(0).to(device)
+    img_crop = enhance_ocr_image(img_crop, use_wavelet=True)
+    img_tensor = torch.FloatTensor(img_crop).unsqueeze(0).to(device)
     
     with torch.no_grad():
         preds = crnn_model(img_tensor)

@@ -29,6 +29,7 @@ yolo_dataset/
 data/
 weights/
 Algerian*/
+Character*/
 *.jpg
 
 # ── Inference output ──────────────────────────
@@ -37,6 +38,7 @@ output/
 # ── IDE / OS ──────────────────────────────────
 .idea/
 .vscode/
+.claude/
 *.DS_Store
 Thumbs.db
 

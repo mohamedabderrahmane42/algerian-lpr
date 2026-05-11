@@ -3,7 +3,8 @@ train_ocr.py  –  Algerian License Plate CRNN Trainer (with Augmentation)
 ======================================================================
 """
 
-import os
+from pathlib import Path
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -12,7 +13,7 @@ from tqdm import tqdm
 
 from src.config import RAW_PLATES, OCR_MODEL, NUM_CLASSES, BLANK_IDX, CHARSET, IMG_H, IMG_W
 from src.models.crnn import CRNN
-from src.data.dataset_ocr import PlateDataset, crnn_collate_fn
+from src.data.ocr_support import PlateDataset, crnn_collate_fn, load_compatible_crnn_weights
 from src.utils.formatters import decode_crnn
 
 BATCH_SIZE = 32
@@ -39,13 +40,12 @@ def train():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Device : {device}")
 
-    train_dir = os.path.join(RAW_PLATES, 'train')
-    val_dir   = os.path.join(RAW_PLATES, 'validation')
+    train_dir = Path(RAW_PLATES) / 'train'
+    val_dir   = Path(RAW_PLATES) / 'validation'
 
     print("Loading datasets …")
-    # Enable robust Albumentations here: augment=True
-    train_ds = PlateDataset(train_dir, augment=True)
-    val_ds   = PlateDataset(val_dir, augment=False)
+    train_ds = PlateDataset(train_dir, augment=True, use_wavelet=True)
+    val_ds   = PlateDataset(val_dir, augment=False, use_wavelet=True)
 
     train_loader = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True,
                               collate_fn=crnn_collate_fn, num_workers=0)
@@ -57,11 +57,11 @@ def train():
     optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=1e-4)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=6, factor=0.5, min_lr=1e-5)
 
-    # Allow resuming from existing weights
     if OCR_MODEL.exists():
         print(f"Loading existing weights from {OCR_MODEL} to fine-tune...")
-        ckpt = torch.load(OCR_MODEL, map_location=device)
-        model.load_state_dict(ckpt['model_state_dict'])
+        skipped = load_compatible_crnn_weights(model, OCR_MODEL, device)
+        if skipped:
+            print(f"  Skipped {len(skipped)} incompatible tensors from the old checkpoint")
 
     best_acc = 0.0
 
@@ -71,6 +71,7 @@ def train():
         for images, targets, target_lengths, _ in tqdm(train_loader, desc=f"Epoch {epoch:3d}/{NUM_EPOCHS}"):
             images  = images.to(device)
             targets = targets.to(device)
+            target_lengths = target_lengths.to(device)
 
             optimizer.zero_grad()
             preds = model(images)

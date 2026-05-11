@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Algerian License Plate Recognition</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: #0f1419;
+    color: #e6e6e6;
+    margin: 0;
+    padding: 24px;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  .sub { color: #8a96a6; margin: 0 0 24px; font-size: 0.95rem; }
+  .card {
+    background: #181f28;
+    border: 1px solid #232c38;
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 18px;
+  }
+  .drop {
+    display: block;
+    border: 2px dashed #3a4a5e;
+    border-radius: 10px;
+    padding: 36px 18px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .drop:hover, .drop.drag {
+    border-color: #4caf7e;
+    background: #1e2731;
+  }
+  .drop input { display: none; }
+  .drop p { margin: 0; color: #9ba9bb; }
+  button {
+    background: #4caf7e;
+    color: #0f1419;
+    font-weight: 600;
+    border: 0;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  button:disabled {
+    background: #2a3a48;
+    color: #6a7888;
+    cursor: not-allowed;
+  }
+  button:hover:not(:disabled) { background: #5cd093; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .filename { color: #8a96a6; font-size: 0.9rem; }
+  .result-img { width: 100%; border-radius: 8px; display: block; }
+  .plates { margin-top: 14px; }
+  .plate {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    background: #0e2a1c;
+    border: 1px solid #2c5b40;
+    color: #b4f0c8;
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .plate .meta {
+    font-family: system-ui, sans-serif;
+    font-size: 0.8rem;
+    color: #7a9b8a;
+    letter-spacing: normal;
+  }
+  .empty { color: #8a96a6; font-style: italic; }
+  .err {
+    background: #2a1518;
+    border: 1px solid #5a2530;
+    color: #ff9b9b;
+    padding: 12px 14px;
+    border-radius: 8px;
+  }
+  .spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid #4caf7e;
+    border-bottom-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Algerian License Plate Recognition</h1>
+    <p class="sub">Upload a photo. YOLOv8 detects the plate, CRNN reads the digits.</p>
+
+    <div class="card">
+      <label class="drop" id="drop">
+        <input type="file" id="file" accept="image/*" />
+        <p id="dropmsg">Click or drop an image here</p>
+      </label>
+      <div class="row" style="margin-top: 14px;">
+        <button id="submit" disabled>Detect plate</button>
+        <span class="filename" id="filename"></span>
+      </div>
+    </div>
+
+    <div id="status"></div>
+    <div id="result"></div>
+  </div>
+
+<script>
+const drop = document.getElementById('drop');
+const fileInput = document.getElementById('file');
+const dropMsg = document.getElementById('dropmsg');
+const submit = document.getElementById('submit');
+const filenameEl = document.getElementById('filename');
+const statusEl = document.getElementById('status');
+const resultEl = document.getElementById('result');
+
+let currentFile = null;
+
+function setFile(f) {
+  currentFile = f;
+  if (f) {
+    filenameEl.textContent = f.name + ' (' + Math.round(f.size / 1024) + ' KB)';
+    dropMsg.textContent = 'Selected: ' + f.name;
+    submit.disabled = false;
+  } else {
+    filenameEl.textContent = '';
+    dropMsg.textContent = 'Click or drop an image here';
+    submit.disabled = true;
+  }
+}
+
+fileInput.addEventListener('change', e => {
+  if (e.target.files && e.target.files[0]) setFile(e.target.files[0]);
+});
+
+drop.addEventListener('dragover', e => {
+  e.preventDefault();
+  drop.classList.add('drag');
+});
+drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
+drop.addEventListener('drop', e => {
+  e.preventDefault();
+  drop.classList.remove('drag');
+  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+    setFile(e.dataTransfer.files[0]);
+    fileInput.files = e.dataTransfer.files;
+  }
+});
+
+submit.addEventListener('click', async () => {
+  if (!currentFile) return;
+  submit.disabled = true;
+  statusEl.innerHTML = '<div class="card"><span class="spinner"></span> Detecting…</div>';
+  resultEl.innerHTML = '';
+
+  const form = new FormData();
+  form.append('file', currentFile);
+
+  try {
+    const r = await fetch('/detect', { method: 'POST', body: form });
+    if (!r.ok) {
+      let msg = 'Server error (' + r.status + ')';
+      try {
+        const err = await r.json();
+        if (err && err.detail) msg = err.detail;
+      } catch (_) {}
+      throw new Error(msg);
+    }
+    const data = await r.json();
+    statusEl.innerHTML = '';
+
+    const parts = ['<div class="card">'];
+    parts.push('<img class="result-img" src="' + data.annotated_image + '" alt="Detection result" />');
+    parts.push('<div class="plates">');
+    if (!data.plates || data.plates.length === 0) {
+      parts.push('<div class="empty">No license plate detected.</div>');
+    } else {
+      for (const p of data.plates) {
+        parts.push(
+          '<div class="plate"><span>' + escapeHtml(p.plate) + '</span>' +
+          '<span class="meta">raw: ' + escapeHtml(p.raw) +
+          ' · det: ' + p.det_conf.toFixed(2) + '</span></div>'
+        );
+      }
+    }
+    parts.push('</div></div>');
+    resultEl.innerHTML = parts.join('');
+  } catch (e) {
+    statusEl.innerHTML = '<div class="card err">Error: ' + escapeHtml(e.message) + '</div>';
+  } finally {
+    submit.disabled = false;
+  }
+});
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+</script>
+</body>
+</html>

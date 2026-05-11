@@ -8,5 +8,9 @@ torch
 torchvision
 albumentations
 pandas
+PyWavelets
+fastapi
+uvicorn[standard]
+python-multipart
 
 
